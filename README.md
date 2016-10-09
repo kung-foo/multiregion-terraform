@@ -14,10 +14,10 @@ Amazon has 13 data centers with 35 availability zones spread around the world. T
 
 ### Latency Map
 Note the lower latency when the ping souce in near to one of Amazon's datacenters:
-[![latency map](map_latency.png)](map_latency.png)
+[![latency map](map_latency.png)](https://raw.githubusercontent.com/kung-foo/multiregion-terraform/master/map_latency.png)
 
 ### Terraform Dependency Graph
-[![graph](graph.png)](graph.png)
+[![graph](graph.png)](https://raw.githubusercontent.com/kung-foo/multiregion-terraform/master/graph.png)
 
 ## How-to
 
@@ -29,7 +29,7 @@ Notes:
 * comment out regions in [main.tf](main.tf) to test a smaller deployment
 * Terraform types used: aws_ami, aws_vpc, aws_internet_gateway, aws_subnet, aws_route_table, aws_route_table_association, aws_security_group, aws_instance, and aws_route53_record
 * regions and availability zones were valid at commit time. If Terraform returns an Amazon error complaining about errors launching an instance, edit `az` in [cdn/module.tf](cdn/module.tf)
-    
+
         aws_instance.server.0: Error launching source instance: Unsupported: Your requested instance type (t2.nano) is not supported in your requested Availability Zone (ap-southeast-2a). Please retry your request by not specifying an Availability Zone or choosing ap-southeast-2c, ap-southeast-2b.
         status code: 400, request id: 1c377a9d-9a21-4f33-9def-43faf480d205
 
