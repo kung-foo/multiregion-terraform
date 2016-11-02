@@ -13,7 +13,7 @@ Amazon has 13 data centers with 35 availability zones spread around the world. T
 * All instances allow ICMP Echo Request (ping) from `0.0.0.0/0`
 
 ### Latency Map
-Note the lower latency when the ping souce in near to one of Amazon's datacenters:
+Note the lower latency when the ping souce is near to one of Amazon's datacenters:
 [![latency map](map_latency.png)](https://raw.githubusercontent.com/kung-foo/multiregion-terraform/master/map_latency.png)
 
 ### Terraform Dependency Graph
