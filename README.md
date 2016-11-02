@@ -3,11 +3,11 @@ Example multi-region AWS Terraform application
 
 **TL;DR**: launch 29 EC2 instances in 12 regions with a single terraform command
 
-Amazon has 13 data centers with 35 availability zones spread around the world. This Terraform application launches EC2 instances in every possible zone, and ties them together into a single domain name that routes pings to the closest instance.
+Amazon has 13 data centers with 38 availability zones spread around the world. This Terraform application launches EC2 instances in every possible zone, and ties them together into a single domain name that routes pings to the closest instance.
 
 ## Features
 
-* Single `main.tf` with a module instance for each Amazon's [11 regions][1]
+* Single `main.tf` with a module instance for each Amazon's [12 regions][1]
 * Creates an EC2 instance in every region and availability zone
 * Creates a Route 53 record with [latency based routing][2] to all EC2 instances
 * All instances allow ICMP Echo Request (ping) from `0.0.0.0/0`
