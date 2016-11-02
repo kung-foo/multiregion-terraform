@@ -1,7 +1,7 @@
 # multiregion-terraform
 Example multi-region AWS Terraform application
 
-**TL;DR**: launch 26 EC2 instances in 11 regions with a single terraform command
+**TL;DR**: launch 29 EC2 instances in 12 regions with a single terraform command
 
 Amazon has 13 data centers with 35 availability zones spread around the world. This Terraform application launches EC2 instances in every possible zone, and ties them together into a single domain name that routes pings to the closest instance.
 
