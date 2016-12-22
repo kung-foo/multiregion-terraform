@@ -12,6 +12,7 @@ variable "r53_zone_id" {
   default = "<change me>"
 }
 
+# Will be prepended to the name associated r53_zone_id
 variable "r53_domain_name" {
-  default = "change.me.com"
+  default = "cdn"
 }

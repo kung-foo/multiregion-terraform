@@ -1,10 +1,16 @@
+terraform {
+  required_version = ">= 0.8.1"
+}
+
 variable "az" {
   type = "map"
 
   default = {
     "eu-west-1"      = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
+    "eu-west-2"      = ["eu-west-2a", "eu-west-2b"]
     "eu-central-1"   = ["eu-central-1a", "eu-central-1b"]
-    "us-east-1"      = ["us-east-1a", "us-east-1d", "us-east-1c", "us-east-1d"]
+    "ca-central-1"   = ["ca-central-1a", "ca-central-1b"]
+    "us-east-1"      = ["us-east-1a", "us-east-1c", "us-east-1d", "us-east-1e"]
     "us-east-2"      = ["us-east-2a", "us-east-2b", "us-east-2c"]
     "us-west-1"      = ["us-west-1b", "us-west-1c"]
     "us-west-2"      = ["us-west-2a", "us-west-2b", "us-west-2c"]
@@ -19,6 +25,17 @@ variable "az" {
 
 provider "aws" {
   region = "${var.region}"
+}
+
+/*
+TODO: once https://github.com/hashicorp/terraform/issues/1497 is addressed
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+*/
+
+data "aws_route53_zone" "default" {
+  zone_id = "${var.r53_zone_id}"
 }
 
 data "aws_ami" "default" {
@@ -130,8 +147,8 @@ resource "aws_instance" "server" {
 }
 
 resource "aws_route53_record" "cdn" {
-  zone_id        = "${var.r53_zone_id}"
-  name           = "${var.r53_domain_name}"
+  zone_id        = "${data.aws_route53_zone.default.zone_id}"
+  name           = "${format("%s.%s", var.r53_domain_name, data.aws_route53_zone.default.name)}"
   type           = "A"
   ttl            = "60"
   records        = ["${aws_instance.server.*.public_ip}"]

@@ -1,13 +1,13 @@
 # multiregion-terraform
 Example multi-region AWS Terraform application
 
-**TL;DR**: launch 29 EC2 instances in 12 regions with a single terraform command
+**TL;DR**: launch 32 EC2 instances in 14 regions with a single terraform command
 
-Amazon has 13 data centers with 38 availability zones spread around the world. This Terraform application launches EC2 instances in every possible zone, and ties them together into a single domain name that routes pings to the closest instance.
+Amazon has 14 data centers with 38 availability zones spread around the world. This Terraform application launches EC2 instances in every possible zone, and ties them together into a single domain name that routes pings to the closest instance.
 
 ## Features
 
-* Single `main.tf` with a module instance for each Amazon's [12 regions][1]
+* Single `main.tf` with a module instance for each Amazon's [14 regions][1]
 * Creates an EC2 instance in every region and availability zone
 * Creates a Route 53 record with [latency based routing][2] to all EC2 instances
 * All instances allow ICMP Echo Request (ping) from `0.0.0.0/0`
@@ -24,7 +24,7 @@ Note the lower latency when the ping souce is near to one of Amazon's datacenter
 Notes:
 
 * **IMPORTANT**: edit [cdn/variables.tf](cdn/variables.tf) and set `r53_zone_id` and `r53_domain_name`
-* tested with Terraform v0.7.4
+* tested with Terraform v0.8.2, requires Terraform >= v0.8.1
 * override the Amazon credential [profile settings][3] by setting `AWS_PROFILE=blah`
 * comment out regions in [main.tf](main.tf) to test a smaller deployment
 * Terraform types used: aws_ami, aws_vpc, aws_internet_gateway, aws_subnet, aws_route_table, aws_route_table_association, aws_security_group, aws_instance, and aws_route53_record
@@ -65,8 +65,25 @@ $ dig +short @8.8.8.8 cdn.jonathan.camp
 52.90.73.117
 52.91.127.142
 54.198.56.163
+
+# print all servers using jq (https://stedolan.github.io/jq/)
+$ jq '[.modules[] | select(.outputs.servers.value != null) | .outputs.servers.value[] ]' terraform.tfstate
+[
+  "52.199.99.175",
+  "52.193.39.37",
+  "52.78.183.148",
+  "52.78.230.74",
+  "35.154.67.193",
+  "35.154.47.136",
+  "52.77.254.174",
+  "52.221.244.90",
+  "13.54.91.109",
+  "13.54.35.0",
+...
+]
 ```
 
 [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
 [2]: https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html#routing-policy-latency
 [3]: https://www.terraform.io/docs/providers/aws/#shared-credentials-file
+[4]: https://stedolan.github.io/jq/
