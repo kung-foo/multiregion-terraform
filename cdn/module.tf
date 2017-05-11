@@ -65,7 +65,10 @@ data "aws_ami" "default" {
 }
 
 resource "aws_vpc" "main" {
-  cidr_block = "192.168.0.0/16"
+  cidr_block                       = "192.168.0.0/16"
+  assign_generated_ipv6_cidr_block = "true"
+  enable_dns_support               = "true"
+  enable_dns_hostnames             = "true"
 
   tags {
     Name = "cdn-${var.region}"
@@ -81,11 +84,13 @@ resource "aws_internet_gateway" "default" {
 }
 
 resource "aws_subnet" "public" {
-  vpc_id                  = "${aws_vpc.main.id}"
-  cidr_block              = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
-  map_public_ip_on_launch = true
-  availability_zone       = "${element(var.az[var.region], count.index)}"
-  count                   = "${length(var.az[var.region])}"
+  vpc_id                          = "${aws_vpc.main.id}"
+  cidr_block                      = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
+  ipv6_cidr_block                 = "${cidrsubnet(aws_vpc.main.ipv6_cidr_block, 8, count.index)}"
+  map_public_ip_on_launch         = true
+  assign_ipv6_address_on_creation = true
+  availability_zone               = "${element(var.az[var.region], count.index)}"
+  count                           = "${length(var.az[var.region])}"
 
   tags = {
     Name = "cdn-${element(var.az[var.region], count.index)}-public"
@@ -100,6 +105,11 @@ resource "aws_route_table" "public" {
     cidr_block = "0.0.0.0/0"
     gateway_id = "${aws_internet_gateway.default.id}"
   }
+
+  route {
+    ipv6_cidr_block = "::/0"
+    gateway_id      = "${aws_internet_gateway.default.id}"
+  }
 }
 
 resource "aws_route_table_association" "public" {
@@ -111,14 +121,13 @@ resource "aws_route_table_association" "public" {
 resource "aws_security_group" "default" {
   vpc_id = "${aws_vpc.main.id}"
 
-  /*
   ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
   }
-  */
 
   ingress {
     from_port   = -1
@@ -127,10 +136,11 @@ resource "aws_security_group" "default" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
   }
 }
 
@@ -139,6 +149,7 @@ resource "aws_instance" "server" {
   instance_type          = "${var.instance_type}"
   ami                    = "${data.aws_ami.default.id}"
   subnet_id              = "${element(aws_subnet.public.*.id, count.index)}"
+  ipv6_address_count     = "1"
   vpc_security_group_ids = ["${aws_security_group.default.id}", "${aws_vpc.main.default_security_group_id}"]
 
   tags = {
@@ -146,13 +157,26 @@ resource "aws_instance" "server" {
   }
 }
 
-resource "aws_route53_record" "cdn" {
+resource "aws_route53_record" "cdnv4" {
   zone_id        = "${data.aws_route53_zone.default.zone_id}"
   name           = "${format("%s.%s", var.r53_domain_name, data.aws_route53_zone.default.name)}"
   type           = "A"
   ttl            = "60"
   records        = ["${aws_instance.server.*.public_ip}"]
-  set_identifier = "cdn-${var.region}"
+  set_identifier = "cdn-${var.region}-v4"
+
+  latency_routing_policy {
+    region = "${var.region}"
+  }
+}
+
+resource "aws_route53_record" "cdnv6" {
+  zone_id        = "${data.aws_route53_zone.default.zone_id}"
+  name           = "${format("%s.%s", var.r53_domain_name, data.aws_route53_zone.default.name)}"
+  type           = "AAAA"
+  ttl            = "60"
+  records        = ["${aws_instance.server.*.ipv6_addresses.0}"]
+  set_identifier = "cdn-${var.region}-v6"
 
   latency_routing_policy {
     region = "${var.region}"
