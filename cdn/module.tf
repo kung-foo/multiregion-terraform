@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 0.9.5"
+  required_version = ">= 0.10.3"
 }
 
 provider "aws" {
@@ -98,26 +98,16 @@ resource "aws_security_group" "default" {
   vpc_id = "${aws_vpc.main.id}"
 
   ingress {
-    from_port        = 80
-    to_port          = 80
-    protocol         = "tcp"
+    from_port        = -1
+    to_port          = -1
+    protocol         = "icmp"
     cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
   }
 
   ingress {
     from_port        = -1
     to_port          = -1
-    protocol         = "icmp"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
-
-  egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
+    protocol         = "icmpv6"
     ipv6_cidr_blocks = ["::/0"]
   }
 }
@@ -153,7 +143,7 @@ resource "aws_route53_record" "cdnv6" {
   name           = "${format("%s.%s", var.r53_domain_name, data.aws_route53_zone.default.name)}"
   type           = "AAAA"
   ttl            = "60"
-  records        = ["${aws_instance.server.*.ipv6_addresses}"] # Still now works https://github.com/hashicorp/terraform/issues/8696
+  records        = ["${flatten(aws_instance.server.*.ipv6_addresses)}"]
   set_identifier = "cdn-${var.region}-v6"
 
   latency_routing_policy {
