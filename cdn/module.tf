@@ -8,7 +8,7 @@ provider "aws" {
 
 data "aws_availability_zones" "available" {
   state             = "available"
-  blacklisted_names = var.blacklisted_az
+  exclude_names     = var.blacklisted_az
 }
 
 data "aws_route53_zone" "default" {
